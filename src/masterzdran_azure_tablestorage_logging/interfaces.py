@@ -1,23 +1,24 @@
+"""
+Interfaces for Azure Table Storage logging module.
+"""
+
+from typing import Dict, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
 
 
 class StorageInterface(ABC):
     """
-    Abstract base class for storage implementations.
+    Abstract base class for storage interfaces.
     """
 
     @abstractmethod
-    async def store_log(
-        self, partition_key: str, row_key: str, data: Dict[str, Any]
-    ) -> None:
+    async def store_log(self, partition_key: str, row_key: str, data: Dict[str, Any]):
         """
         Store a log entry in the storage.
 
         :param partition_key: The partition key for the log entry.
         :param row_key: The row key for the log entry.
-        :param data: The log entry data.
+        :param data: A dictionary containing the log data.
         """
         pass
 
@@ -28,48 +29,27 @@ class StorageInterface(ABC):
         continuation_token: Optional[str] = None,
         order_by: str = "Timestamp",
         ascending: bool = False,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[Dict[str, Any]] = None
     ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
         """
-        Retrieve logs with pagination, ordering, and filtering capabilities.
+        Retrieve logs from the storage.
 
-        Args:
-            page_size: Number of records per page
-            continuation_token: Token for retrieving the next page
-            order_by: Field to order results by
-            ascending: Sort order (True for ascending, False for descending)
-            filters: Dictionary of field-value pairs to filter results
-
-        Returns:
-            Tuple containing list of log entries and continuation token for next page
+        :param page_size: The number of logs to retrieve per page.
+        :param continuation_token: The token to continue retrieving logs from where the last query left off.
+        :param order_by: The field to order the logs by.
+        :param ascending: Whether to order the logs in ascending order.
+        :param filters: A dictionary of filters to apply to the query.
+        :return: A tuple containing a list of logs and an optional continuation token.
         """
         pass
 
     @abstractmethod
-    async def get_log_entry(
-        self, partition_key: str, row_key: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_log_entry(self, partition_key: str, row_key: str) -> Optional[Dict[str, Any]]:
         """
-        Retrieve a specific log entry by its partition key and row key.
+        Retrieve a single log entry from the storage.
 
-        Returns:
-            Log entry as dictionary if found, None otherwise
-        """
-        pass
-
-
-class LoggerInterface(ABC):
-    """
-    Abstract base class for logger implementations.
-    """
-
-    @abstractmethod
-    async def log(self, level: str, message: str, **kwargs) -> None:
-        """
-        Log a message with a specific level.
-
-        :param level: The log level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).
-        :param message: The log message.
-        :param kwargs: Additional keyword arguments for the log entry.
+        :param partition_key: The partition key of the log entry.
+        :param row_key: The row key of the log entry.
+        :return: A dictionary containing the log entry or None if not found.
         """
         pass

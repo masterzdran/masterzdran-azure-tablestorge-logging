@@ -1,18 +1,18 @@
+"""
+Logger for Azure Table Storage logging module.
+"""
+
 import inspect
-import uuid
+import json
+from typing import Dict, Any, Optional
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, Optional
-
-from .interfaces import LoggerInterface, StorageInterface
-from .models import LogEntry
+from .storage import AzureTableStorage
 
 
-class LogLevel(Enum):
+class LogLevel:
     """
-    Enum representing log levels.
+    Log levels for the logger.
     """
-
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -20,70 +20,55 @@ class LogLevel(Enum):
     CRITICAL = "CRITICAL"
 
 
-class AzureLogger(LoggerInterface):
+class AzureLogger:
     """
-    Logger implementation that stores logs in Azure Table Storage.
+    AzureLogger is a class that provides logging functionality using Azure Table Storage.
     """
 
-    def __init__(
-        self, storage: StorageInterface, logger_name: str, default_trace_id: str
-    ):
+    def __init__(self, storage: AzureTableStorage, logger_name: str, default_trace_id: Optional[str] = None):
         """
-        Initialize the AzureLogger.
+        Initialize the AzureLogger instance.
 
-        :param storage: The storage implementation to use for storing logs.
+        :param storage: An instance of AzureTableStorage.
         :param logger_name: The name of the logger.
-        :param default_trace_id: The default trace ID to use if none is provided.
+        :param default_trace_id: The default trace ID to use for log entries.
         """
         self.storage = storage
         self.logger_name = logger_name
         self.default_trace_id = default_trace_id
 
-    async def log(
-        self,
-        level: str,
-        message: str,
-        trace_id: Optional[str] = None,
-        metadata: Optional[Dict] = None,
-    ):
+    async def _log(self, level: str, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
         """
-        Log a message with a specific level.
+        Log a message with the specified level.
 
-        :param level: The log level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).
+        :param level: The log level.
         :param message: The log message.
         :param trace_id: The trace ID for the log entry.
         :param metadata: Additional metadata for the log entry.
         """
-        if not message:
-            raise ValueError("Message cannot be empty")
-        if trace_id is not None and not trace_id:
-            raise ValueError("Trace ID cannot be empty")
+        if trace_id is None:
+            trace_id = self.default_trace_id
 
-        frame = inspect.currentframe().f_back
-        location = f"{frame.f_code.co_filename}:{frame.f_lineno}"
+        caller_frame = inspect.stack()[2]
+        caller_module = inspect.getmodule(caller_frame[0])
+        caller_location = f"{caller_module.__name__}:{caller_frame.lineno}"
 
         log_entry = {
             "LogLevel": level,
             "Message": message,
             "Timestamp": datetime.utcnow().isoformat(),
-            "TraceId": trace_id or self.default_trace_id,
+            "TraceId": trace_id,
             "LoggerName": self.logger_name,
-            "Location": location,
-            "Metadata": metadata,
+            "Location": caller_location,
+            "Metadata": metadata or {}
         }
-        partition_key = log_entry["TraceId"]
-        row_key = f"{log_entry['Timestamp']}_{level}"
 
-        await self.storage.store_log(
-            partition_key=partition_key, row_key=row_key, data=log_entry
-        )
+        partition_key = self.logger_name
+        row_key = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
 
-    async def debug(
-        self,
-        message: str,
-        trace_id: Optional[str] = None,
-        metadata: Optional[Dict] = None,
-    ):
+        await self.storage.store_log(partition_key, row_key, log_entry)
+
+    async def debug(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
         """
         Log a debug message.
 
@@ -91,14 +76,9 @@ class AzureLogger(LoggerInterface):
         :param trace_id: The trace ID for the log entry.
         :param metadata: Additional metadata for the log entry.
         """
-        await self.log("DEBUG", message, trace_id, metadata)
+        await self._log(LogLevel.DEBUG, message, trace_id, metadata)
 
-    async def info(
-        self,
-        message: str,
-        trace_id: Optional[str] = None,
-        metadata: Optional[Dict] = None,
-    ):
+    async def info(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
         """
         Log an info message.
 
@@ -106,14 +86,9 @@ class AzureLogger(LoggerInterface):
         :param trace_id: The trace ID for the log entry.
         :param metadata: Additional metadata for the log entry.
         """
-        await self.log("INFO", message, trace_id, metadata)
+        await self._log(LogLevel.INFO, message, trace_id, metadata)
 
-    async def warning(
-        self,
-        message: str,
-        trace_id: Optional[str] = None,
-        metadata: Optional[Dict] = None,
-    ):
+    async def warning(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
         """
         Log a warning message.
 
@@ -121,14 +96,9 @@ class AzureLogger(LoggerInterface):
         :param trace_id: The trace ID for the log entry.
         :param metadata: Additional metadata for the log entry.
         """
-        await self.log("WARNING", message, trace_id, metadata)
+        await self._log(LogLevel.WARNING, message, trace_id, metadata)
 
-    async def error(
-        self,
-        message: str,
-        trace_id: Optional[str] = None,
-        metadata: Optional[Dict] = None,
-    ):
+    async def error(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
         """
         Log an error message.
 
@@ -136,14 +106,9 @@ class AzureLogger(LoggerInterface):
         :param trace_id: The trace ID for the log entry.
         :param metadata: Additional metadata for the log entry.
         """
-        await self.log("ERROR", message, trace_id, metadata)
+        await self._log(LogLevel.ERROR, message, trace_id, metadata)
 
-    async def critical(
-        self,
-        message: str,
-        trace_id: Optional[str] = None,
-        metadata: Optional[Dict] = None,
-    ):
+    async def critical(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
         """
         Log a critical message.
 
@@ -151,4 +116,4 @@ class AzureLogger(LoggerInterface):
         :param trace_id: The trace ID for the log entry.
         :param metadata: Additional metadata for the log entry.
         """
-        await self.log("CRITICAL", message, trace_id, metadata)
+        await self._log(LogLevel.CRITICAL, message, trace_id, metadata)
