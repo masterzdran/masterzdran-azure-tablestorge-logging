@@ -1,7 +1,3 @@
-"""
-Unit tests for Azure Logger and Azure Table Storage logging module.
-"""
-
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -67,6 +63,7 @@ class MockStorage(StorageInterface):
     async def store_log(self, partition_key: str, row_key: str, data: dict) -> None:
         if not data or "Message" not in data:
             raise ValueError("Invalid log data")
+        self.store_log.call_args = ((), {"partition_key": partition_key, "row_key": row_key, "data": data})
 
     async def get_logs(
         self,
@@ -76,7 +73,8 @@ class MockStorage(StorageInterface):
         ascending: bool = False,
         filters: Optional[Dict[str, Any]] = None,
     ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
-        pass
+        self.get_logs.call_args = ((), {"page_size": page_size, "continuation_token": continuation_token, "order_by": order_by, "ascending": ascending, "filters": filters})
+        return [], None
 
     async def get_log_entry(
         self, partition_key: str, row_key: str
@@ -214,7 +212,7 @@ async def test_storage_store_log_data_validation(azure_storage):
     """
     Test data validation when storing a log entry in AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, _ = await azure_storage
 
     # Test with empty data
     with pytest.raises(ValueError):
@@ -496,3 +494,5 @@ async def test_get_log_entry_invalid_keys(azure_storage):
 
     with pytest.raises(ValueError, match="Partition key cannot be empty"):
         await storage.get_log_entry(None, "row_key")
+
+
