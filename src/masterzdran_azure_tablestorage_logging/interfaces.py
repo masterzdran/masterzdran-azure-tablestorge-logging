@@ -2,8 +2,8 @@
 Interfaces for Azure Table Storage logging module.
 """
 
-from typing import Dict, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class StorageInterface(ABC):
@@ -29,7 +29,7 @@ class StorageInterface(ABC):
         continuation_token: Optional[str] = None,
         order_by: str = "Timestamp",
         ascending: bool = False,
-        filters: Optional[Dict[str, Any]] = None
+        filters: Optional[Dict[str, Any]] = None,
     ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
         """
         Retrieve logs from the storage.
@@ -44,7 +44,9 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_log_entry(self, partition_key: str, row_key: str) -> Optional[Dict[str, Any]]:
+    async def get_log_entry(
+        self, partition_key: str, row_key: str
+    ) -> Optional[Dict[str, Any]]:
         """
         Retrieve a single log entry from the storage.
 

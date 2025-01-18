@@ -4,8 +4,9 @@ Logger for Azure Table Storage logging module.
 
 import inspect
 import json
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
+
 from .storage import AzureTableStorage
 
 
@@ -13,6 +14,7 @@ class LogLevel:
     """
     Log levels for the logger.
     """
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -25,7 +27,12 @@ class AzureLogger:
     AzureLogger is a class that provides logging functionality using Azure Table Storage.
     """
 
-    def __init__(self, storage: AzureTableStorage, logger_name: str, default_trace_id: Optional[str] = None):
+    def __init__(
+        self,
+        storage: AzureTableStorage,
+        logger_name: str,
+        default_trace_id: Optional[str] = None,
+    ):
         """
         Initialize the AzureLogger instance.
 
@@ -37,7 +44,13 @@ class AzureLogger:
         self.logger_name = logger_name
         self.default_trace_id = default_trace_id
 
-    async def _log(self, level: str, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    async def _log(
+        self,
+        level: str,
+        message: str,
+        trace_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log a message with the specified level.
 
@@ -60,7 +73,7 @@ class AzureLogger:
             "TraceId": trace_id,
             "LoggerName": self.logger_name,
             "Location": caller_location,
-            "Metadata": metadata or {}
+            "Metadata": metadata or {},
         }
 
         partition_key = self.logger_name
@@ -68,7 +81,12 @@ class AzureLogger:
 
         await self.storage.store_log(partition_key, row_key, log_entry)
 
-    async def debug(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    async def debug(
+        self,
+        message: str,
+        trace_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log a debug message.
 
@@ -78,7 +96,12 @@ class AzureLogger:
         """
         await self._log(LogLevel.DEBUG, message, trace_id, metadata)
 
-    async def info(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    async def info(
+        self,
+        message: str,
+        trace_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log an info message.
 
@@ -88,7 +111,12 @@ class AzureLogger:
         """
         await self._log(LogLevel.INFO, message, trace_id, metadata)
 
-    async def warning(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    async def warning(
+        self,
+        message: str,
+        trace_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log a warning message.
 
@@ -98,7 +126,12 @@ class AzureLogger:
         """
         await self._log(LogLevel.WARNING, message, trace_id, metadata)
 
-    async def error(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    async def error(
+        self,
+        message: str,
+        trace_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log an error message.
 
@@ -108,7 +141,12 @@ class AzureLogger:
         """
         await self._log(LogLevel.ERROR, message, trace_id, metadata)
 
-    async def critical(self, message: str, trace_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    async def critical(
+        self,
+        message: str,
+        trace_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log a critical message.
 

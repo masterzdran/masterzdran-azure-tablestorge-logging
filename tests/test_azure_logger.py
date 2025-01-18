@@ -496,5 +496,3 @@ async def test_get_log_entry_invalid_keys(azure_storage):
 
     with pytest.raises(ValueError, match="Partition key cannot be empty"):
         await storage.get_log_entry(None, "row_key")
-
-
