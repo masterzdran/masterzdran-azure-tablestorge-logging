@@ -1,4 +1,4 @@
-# Azure Logger
+# Masterzdran Azure Table Storage Logging
 
 A professional Python logging module that uses Azure Table Storage for structured logging with support for trace IDs, metadata, and different log levels.
 
