@@ -154,4 +154,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Security
 
-For security concerns, please email security@yourdomain.com
+For security concerns, please email masterzdran@gmail.com
