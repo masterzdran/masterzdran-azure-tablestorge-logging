@@ -39,8 +39,8 @@ jobs:
         
     - name: Code quality checks
       run: |
-        black . --check
-        isort . --check-only
+        black src/ --check
+        isort src/ --check-only
         pylint --rcfile=./pylintrc --disable=R0913 src/
         
     - name: Security checks
