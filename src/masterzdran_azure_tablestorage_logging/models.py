@@ -2,7 +2,7 @@
 Models for Azure Table Storage logging module.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class LogEntry:
@@ -28,11 +28,7 @@ class LogEntry:
 
         :return: A dictionary representation of the log entry.
         """
-        return {
-            "PartitionKey": self.partition_key,
-            "RowKey": self.row_key,
-            **self.data
-        }
+        return {"PartitionKey": self.partition_key, "RowKey": self.row_key, **self.data}
 
     def get_partition_key(self) -> str:
         """
