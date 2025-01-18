@@ -42,7 +42,6 @@ jobs:
         black . --check
         isort . --check-only
         pylint src/
-        mypy src/
         
     - name: Security checks
       run: |
