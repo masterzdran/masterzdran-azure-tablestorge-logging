@@ -41,7 +41,7 @@ jobs:
       run: |
         black . --check
         isort . --check-only
-        pylint src/
+        pylint --rcfile=pylintrc src/
         
     - name: Security checks
       run: |
