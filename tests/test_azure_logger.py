@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
 from azure.data.tables import TableClient, TableServiceClient
+import pytest_asyncio
 
 from masterzdran_azure_tablestorage_logging import AzureLogger, LogLevel
 from masterzdran_azure_tablestorage_logging.interfaces import StorageInterface
@@ -12,7 +13,7 @@ from masterzdran_azure_tablestorage_logging.storage import AzureTableStorage
 
 
 # Storage Test Fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 def mock_table_client():
     """
     Fixture for mocking TableClient.
@@ -23,7 +24,7 @@ def mock_table_client():
     return client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def mock_table_service():
     """
     Fixture for mocking TableServiceClient.
@@ -33,7 +34,7 @@ def mock_table_service():
     return service
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def azure_storage(mock_table_service, mock_table_client):
     """
     Fixture for initializing AzureTableStorage with mocked services.
@@ -82,7 +83,7 @@ class MockStorage(StorageInterface):
         pass
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def mock_storage():
     """
     Fixture for initializing MockStorage.
@@ -90,7 +91,7 @@ def mock_storage():
     return MockStorage()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def logger(mock_storage):
     """
     Fixture for initializing AzureLogger with MockStorage.
@@ -108,7 +109,7 @@ async def test_storage_initialization(azure_storage):
     """
     Test AzureTableStorage initialization.
     """
-    storage, _ = await azure_storage
+    storage, _ = azure_storage
     assert storage.table_name == "logs"
     assert storage.table_client is not None
 
@@ -133,7 +134,7 @@ async def test_storage_store_log_basic(azure_storage):
     """
     Test storing a basic log entry in AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     test_data = {
         "LogLevel": "INFO",
@@ -161,7 +162,7 @@ async def test_storage_store_log_with_metadata(azure_storage):
     """
     Test storing a log entry with metadata in AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     metadata = {"user_id": "123", "action": "login"}
     test_data = {
@@ -188,7 +189,7 @@ async def test_storage_store_log_with_special_characters(azure_storage):
     """
     Test storing a log entry with special characters in AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     test_data = {
         "LogLevel": "INFO",
@@ -212,7 +213,7 @@ async def test_storage_store_log_data_validation(azure_storage):
     """
     Test data validation when storing a log entry in AzureTableStorage.
     """
-    storage, _ = await azure_storage
+    storage, _ = azure_storage
 
     # Test with empty data
     with pytest.raises(ValueError):
@@ -307,7 +308,7 @@ async def test_get_logs_pagination(azure_storage):
     """
     Test pagination when retrieving logs from AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     # Prepare mock data
     mock_entries = [
@@ -363,7 +364,7 @@ async def test_get_logs_with_filters(azure_storage):
     """
     Test retrieving logs with filters from AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     # Configure mock
     mock_query_result = AsyncMock()
@@ -390,7 +391,7 @@ async def test_get_logs_ordering(azure_storage):
     """
     Test ordering of logs when retrieving from AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     # Prepare mock data
     mock_entries = [
@@ -417,7 +418,7 @@ async def test_get_log_entry_success(azure_storage):
     """
     Test successful retrieval of a single log entry from AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     # Prepare mock data
     mock_entry = {
@@ -447,7 +448,7 @@ async def test_get_log_entry_not_found(azure_storage):
     """
     Test retrieval of a non-existent log entry from AzureTableStorage.
     """
-    storage, mock_client = await azure_storage
+    storage, mock_client = azure_storage
 
     mock_client.get_entity = AsyncMock(side_effect=ResourceNotFoundError())
 
@@ -464,7 +465,7 @@ async def test_get_logs_invalid_parameters(azure_storage):
     """
     Test invalid parameters when retrieving logs from AzureTableStorage.
     """
-    storage, _ = await azure_storage
+    storage, _ = azure_storage
 
     # Test invalid page size
     with pytest.raises(ValueError, match="Page size must be positive"):
@@ -484,7 +485,7 @@ async def test_get_log_entry_invalid_keys(azure_storage):
     """
     Test invalid partition key and row key when retrieving a log entry from AzureTableStorage.
     """
-    storage, _ = await azure_storage
+    storage, _ = azure_storage
 
     with pytest.raises(ValueError, match="Partition key cannot be empty"):
         await storage.get_log_entry("", "row_key")
