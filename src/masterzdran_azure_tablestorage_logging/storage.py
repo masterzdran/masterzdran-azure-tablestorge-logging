@@ -105,7 +105,7 @@ class AzureTableStorage(StorageInterface):
         }
 
         try:
-            self.table_client.create_entity(entity=entity)
+            await self.table_client.create_entity(entity=entity)
         except Exception as e:
             raise Exception(f"Failed to store log: {str(e)}") from e
 
@@ -202,7 +202,7 @@ class AzureTableStorage(StorageInterface):
             raise ValueError("Row key cannot be empty")
 
         try:
-            entity = await self.table_client.get_entity(
+            entity = self.table_client.get_entity(
                 partition_key=partition_key, row_key=row_key
             )
             return dict(entity)
