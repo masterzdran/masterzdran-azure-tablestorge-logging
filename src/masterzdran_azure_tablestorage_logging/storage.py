@@ -170,7 +170,7 @@ class AzureTableStorage(StorageInterface):
 
         # Process results
         logs = []
-        async for entity in query_result:
+        for entity in query_result:
             logs.append(dict(entity))
 
         # Sort results
