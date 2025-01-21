@@ -18,7 +18,7 @@ A professional Python logging module that uses Azure Table Storage for structure
 Install the package using pip:
 
 ```bash
-pip install azure-logger
+pip install masterzdran-azure-tablestorge-logging==1.0.0
 ```
 
 For development installation:
@@ -30,8 +30,8 @@ pip install -e .[dev]
 ## Quick Start
 
 ```python
-from azure_logger import AzureLogger
-from azure_logger.storage import AzureTableStorage
+from masterzdran_azure_tablestorage_logging import AzureLogger
+from masterzdran_azure_tablestorage_logging.storage import AzureTableStorage
 
 # Initialize the storage
 storage = AzureTableStorage(
@@ -79,8 +79,8 @@ logger = AzureLogger(
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/azure-logger.git
-cd azure-logger
+git clone git@github.com:masterzdran/masterzdran-azure-tablestorge-logging.git
+cd masterzdran-azure-tablestorge-logging
 ```
 
 2. Create and activate a virtual environment:
