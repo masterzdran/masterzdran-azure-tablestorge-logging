@@ -18,7 +18,7 @@ class AzureTableStorage(StorageInterface):
     It implements the StorageInterface for storing and retrieving logs.
     """
 
-    async def __init__(self, connection_string: str, table_name: str):
+    def __init__(self, connection_string: str, table_name: str):
         """
         Initialize the AzureTableStorage instance.
 
@@ -31,21 +31,21 @@ class AzureTableStorage(StorageInterface):
         if not table_name:
             raise ValueError("Table name cannot be empty")
 
-        self.table_service_client = await TableServiceClient.from_connection_string(
+        self.table_service_client = TableServiceClient.from_connection_string(
             connection_string
         )
-        self.table_client = await self.table_service_client.get_table_client(
+        self.table_client = self.table_service_client.get_table_client(
             table_name=table_name
         )
         self.table_name = table_name
-        await self._create_table_if_not_exists()
+        self._create_table_if_not_exists()
 
-    async def _create_table_if_not_exists(self):
+    def _create_table_if_not_exists(self):
         """
         Create the table if it does not already exist.
         """
         try:
-            await self.table_service_client.create_table(self.table_name)
+            self.table_service_client.create_table(self.table_name)
         except ResourceExistsError:
             pass
 
@@ -105,7 +105,7 @@ class AzureTableStorage(StorageInterface):
         }
 
         try:
-            await self.table_client.create_entity(entity=entity)
+            self.table_client.create_entity(entity=entity)
         except Exception as e:
             raise Exception(f"Failed to store log: {str(e)}") from e
 
@@ -164,7 +164,7 @@ class AzureTableStorage(StorageInterface):
         ]
 
         # Execute query
-        query_result = await self.table_client.query_entities(
+        query_result = self.table_client.query_entities(
             query_filter=filter_string, **params
         )
 
