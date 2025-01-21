@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="masterzdran-azure-tablestorge-logging",
-    version="1.0.0",
+    version="1.0.1",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=["azure-data-tables>=12.4.0", "azure-core>=1.26.0"],
