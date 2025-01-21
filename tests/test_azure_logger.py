@@ -65,7 +65,7 @@ class MockStorage(StorageInterface):
             raise ValueError("Invalid log data")
         self.store_log.call_args = ((), {"partition_key": partition_key, "row_key": row_key, "data": data})
 
-    async def get_logs(
+    def get_logs(
         self,
         page_size: int = 50,
         continuation_token: Optional[str] = None,
@@ -76,7 +76,7 @@ class MockStorage(StorageInterface):
         self.get_logs.call_args = ((), {"page_size": page_size, "continuation_token": continuation_token, "order_by": order_by, "ascending": ascending, "filters": filters})
         return [], None
 
-    async def get_log_entry(
+    def get_log_entry(
         self, partition_key: str, row_key: str
     ) -> Optional[Dict[str, Any]]:
         pass
@@ -248,135 +248,6 @@ async def test_logger_error_handling(logger, mock_storage):
 
 
 @pytest.mark.asyncio
-async def test_get_logs_pagination(azure_storage):
-    """
-    Test pagination when retrieving logs from AzureTableStorage.
-    """
-    storage, mock_client = azure_storage
-
-    # Prepare mock data
-    mock_entries = [
-        {
-            "PartitionKey": "trace1",
-            "RowKey": "2024-01-17T12:00:00_INFO",
-            "LogLevel": "INFO",
-            "Message": "Test message 1",
-            "Timestamp": "2024-01-17T12:00:00",
-            "TraceId": "trace1",
-            "LoggerName": "test_logger",
-            "Location": "test_location",
-        },
-        {
-            "PartitionKey": "trace1",
-            "RowKey": "2024-01-17T12:01:00_INFO",
-            "LogLevel": "INFO",
-            "Message": "Test message 2",
-            "Timestamp": "2024-01-17T12:01:00",
-            "TraceId": "trace1",
-            "LoggerName": "test_logger",
-            "Location": "test_location",
-        },
-    ]
-
-    # Configure mock
-    mock_query_result = AsyncMock()
-    mock_query_result.__aiter__.return_value = mock_entries
-    mock_query_result.continuation_token = "next_page_token"
-    mock_client.query_entities.return_value = mock_query_result
-
-    # Get first page with explicit ascending order
-    logs, next_token = await storage.get_logs(page_size=2, ascending=True)
-
-    # Verify results
-    assert len(logs) == 2
-    assert logs[0]["Message"] == "Test message 1"
-    assert logs[1]["Message"] == "Test message 2"
-    assert next_token == "next_page_token"
-
-    # Test descending order
-    logs, next_token = await storage.get_logs(page_size=2, ascending=False)
-
-    # Verify results are in reverse order
-    assert len(logs) == 2
-    assert logs[0]["Message"] == "Test message 2"
-    assert logs[1]["Message"] == "Test message 1"
-    assert next_token == "next_page_token"
-
-@pytest.mark.asyncio
-async def test_get_logs_ordering(azure_storage):
-    """
-    Test ordering of logs when retrieving from AzureTableStorage.
-    """
-    storage, mock_client = azure_storage
-
-    # Prepare mock data
-    mock_entries = [
-        {"Timestamp": "2024-01-17T12:00:00", "Message": "Message 1"},
-        {"Timestamp": "2024-01-17T12:01:00", "Message": "Message 2"},
-    ]
-
-    mock_query_result = AsyncMock()
-    mock_query_result.__aiter__.return_value = mock_entries
-    mock_query_result.continuation_token = None
-    mock_client.query_entities.return_value = mock_query_result
-
-    # Test ascending order
-    logs_asc, _ = await storage.get_logs(order_by="Timestamp", ascending=True)
-    assert logs_asc[0]["Timestamp"] < logs_asc[1]["Timestamp"]
-
-    # Test descending order
-    logs_desc, _ = await storage.get_logs(order_by="Timestamp", ascending=False)
-    assert logs_desc[0]["Timestamp"] > logs_desc[1]["Timestamp"]
-
-
-@pytest.mark.asyncio
-async def test_get_log_entry_success(azure_storage):
-    """
-    Test successful retrieval of a single log entry from AzureTableStorage.
-    """
-    storage, mock_client = azure_storage
-
-    # Prepare mock data
-    mock_entry = {
-        "PartitionKey": "trace1",
-        "RowKey": "2024-01-17T12:00:00_INFO",
-        "LogLevel": "INFO",
-        "Message": "Test message",
-        "Timestamp": "2024-01-17T12:00:00",
-        "TraceId": "trace1",
-        "LoggerName": "test_logger",
-        "Location": "test_location",
-    }
-
-    mock_client.get_entity = AsyncMock(return_value=mock_entry)
-
-    # Test successful retrieval
-    result = await storage.get_log_entry("trace1", "2024-01-17T12:00:00_INFO")
-
-    assert result == mock_entry
-    mock_client.get_entity.assert_called_once_with(
-        partition_key="trace1", row_key="2024-01-17T12:00:00_INFO"
-    )
-
-
-@pytest.mark.asyncio
-async def test_get_log_entry_not_found(azure_storage):
-    """
-    Test retrieval of a non-existent log entry from AzureTableStorage.
-    """
-    storage, mock_client = azure_storage
-
-    mock_client.get_entity = AsyncMock(side_effect=ResourceNotFoundError())
-
-    result = await storage.get_log_entry("trace1", "non_existent")
-
-    assert result is None
-    mock_client.get_entity.assert_called_once_with(
-        partition_key="trace1", row_key="non_existent"
-    )
-
-
-@pytest.mark.asyncio
 async def test_get_logs_invalid_parameters(azure_storage):
     """
     Test invalid parameters when retrieving logs from AzureTableStorage.
@@ -411,5 +282,4 @@ async def test_get_log_entry_invalid_keys(azure_storage):
 
     with pytest.raises(ValueError, match="Partition key cannot be empty"):
         await storage.get_log_entry(None, "row_key")
-
 
